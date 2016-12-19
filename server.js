@@ -1,31 +1,12 @@
-const http = require('http');
-const fs = require('fs');
-const chat = require('./client')
+const express = require('express');
+const app = express();
+// const routes = require('./routes')
+// const user = require('./routers/user')
 const path = require('path');
+const http = require('http');
 
-http.createServer((request, response) => {
-    switch (request.url) {
-        case '/':
-            sendFile(__dirname+'/index.html', response)
-            break;
-        case '/subscribe':
-            chat.subscribe(request, response);
-            break;
-        case '/publish':
-            chat.publish("...")
-            break;
-        default:
-            response.statusCode = 404;
-            response.end('Not found')
-    }
-}).listen(3000)
+app.set('port', 3000)
 
-const sendFile = (fileName, response) => {
-    const fileStream = fs.createReadStream(fileName);
-    console.log(fileName)
-    fileStream.on('error', () => {
-        console.log(fileName)
-        response.statusCode = 500;
-        response.end('Server error');
-    }).pipe(response)
-}
+http.createServer(app).listen(app.get('port'), () => {
+    console.log(`Server start on port ${app.get('port')}`)
+})

@@ -15,7 +15,7 @@
             publish.onsubmit = () => {
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST','/publish',true);
-
+                cosnole.log(this.elements.message.value, '!!!!!!!!!!!!!!!!!!!!!')
                 xhr.send(JSON.stringify({message: this.elements.message.value}))
 
                 this.elements.message.value=''
