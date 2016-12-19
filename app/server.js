@@ -1,10 +1,19 @@
-const User = require('./user');
-const firstUser = new User('Vasya');
-const seconduser = new User('Petya');
+import React from 'react'
+import ReactDOMServer from 'react-dom/server'
+import {Main} from './index'
 
-
-if(module.parent){
-     exports.helloUser = firstUser.hello(firstUser);
-} else {
-    firstUser.hello(seconduser);
+export const serverRender = ()=> {
+ const html =  ReactDOMServer.renderToString(<Main />)
+ console.log(html)
+  return `
+     <!doctype html>
+     <html>
+       <head>
+         <title>Server Render </title>
+       </head>
+       <body>
+         <div id="root">${html}</div>
+       </body>
+     </html>
+     `
 }

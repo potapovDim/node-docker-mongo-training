@@ -1,46 +1,11 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Chat</title>
+    <meta charset="UTF-8">
+    <title>Test app</title>
 </head>
-
 <body>
-    <p>Welcome to chat</p>
-    <form id="publish" class="form-inline">
-        <input type="text" name="message" />
-        <input type="submit" / value="Send">
-    </form>
-    <ul id="message"></ul>
-    <script>    
-            publish.onsubmit = () => {
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST','/publish',true);
-                cosnole.log(this.elements.message.value, '!!!!!!!!!!!!!!!!!!!!!')
-                xhr.send(JSON.stringify({message: this.elements.message.value}))
-
-                this.elements.message.value=''
-                return false;
-            };
-            subscribe();
-
-            function subscribe () {
-                const xhr = new XMLHttpRequest();
-                xhr.open("GET","/subscribe", true);
-                xhr.onload = () => {
-                    const li = document.createElement('li');
-                    li.textContent = this.responseText;
-                    message.appendChild(li);
-
-                    subscribe();
-                }
-
-                xhr.onerror = xhr.onabort = () => {
-                    setTimeout(subscribe, 500);
-                }
-
-                xhr.send('');
-            }
-        </script>
+<div id="app"></div>
+<script src="index.js"></script>
 </body>
-
 </html>
