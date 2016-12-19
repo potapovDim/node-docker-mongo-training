@@ -2,8 +2,8 @@ import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import {Main} from './index'
 
-export const serverRender = ()=> {
- const html =  ReactDOMServer.renderToString(<Main />)
+export const serverRender = (comments)=> {
+ const html =  ReactDOMServer.renderToString(<Main comments={comments}/>)
  console.log(html)
   return `
      <!doctype html>
