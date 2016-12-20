@@ -1,26 +1,27 @@
-require('babel-polyfill')
-require('babel-register')
+var path = require('path');
+var express = require('express');
+var webpack = require('webpack');
+var config = require('./webpack.config');
 
-const express = require('express');
-const app = express();
-const {serverRender} = require('./app/server')
-const path = require('path');
-const http = require('http');
+var app = express();
+var compiler = webpack(config);
 
+app.use(require('webpack-dev-middleware')(compiler, {
+  noInfo: true,
+  publicPath: config.output.publicPath
+}));
 
-this.comments = []
+app.use(require('webpack-hot-middleware')(compiler));
 
-app.set('port', 3000)
+app.get('*', function(req, res) {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
-app.use((request, response) => {
-    console.log(request.method)
-    response.end(serverRender(this.comments))
-})
+app.listen(3000, 'localhost', function(err) {
+  if (err) {
+    console.log(err);
+    return;
+  }
 
-app.post('/publish', (request, response) => {
-    console.log(request)
-})
-
-http.createServer(app).listen(app.get('port'), () => {
-    console.log(`Server start on port ${app.get('port')}`)
-})
+  console.log('Listening at http://localhost:3000');
+});

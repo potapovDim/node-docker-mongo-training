@@ -1,24 +1,29 @@
+var path = require('path');
+var webpack = require('webpack');
+
 module.exports = {
-  entry: './app/entry.js',
+  devtool: 'eval',
+  entry: [
+    'webpack-hot-middleware/client',
+    './app/index'
+  ],
   output: {
-    path: './',
-    filename: 'index.js'
+    path: path.join(__dirname, 'dist'),
+    filename: 'bundle.js',
+    publicPath: '/static/'
   },
-  devServer: {
-    port: 4444,
-    historyApiFallback: true
-  },
+  plugins: [
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoErrorsPlugin()
+  ],
   module: {
-    loaders: [
-      {
+    loaders: [{
+      test: /\.css$/,
+      loader: "style-loader!css-loader"
+    },{
       test: /\.js$/,
-      loader: 'babel',
-      include: `${__dirname}/app`,
-      query: {
-        presets: ['react', 'es2015', 'stage-0'],
-        plugins: ['babel-plugin-transform-decorators-legacy']
-      }
-    }
-    ]
+      loaders: ['babel'],
+      include: path.join(__dirname, 'app')
+    }]
   }
-}
+};
