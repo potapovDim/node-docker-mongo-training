@@ -1,5 +1,19 @@
 import React from 'react';
-import { render } from 'react-dom';
+import {render} from 'react-dom';
+import {MoveExample} from './move'
+
+
+const KEY = {
+  LEFT:  37,
+  RIGHT: 39,
+  UP: 38,
+  A: 65,
+  D: 68,
+  W: 87,
+  SPACE: 32
+};
+
+
 
 
 class Counter extends React.Component{
@@ -22,4 +36,4 @@ class Counter extends React.Component{
 }
 
 
-render(<Counter />, document.getElementById('app'));
+render(<MoveExample />, document.getElementById('app'));
