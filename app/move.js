@@ -13,7 +13,7 @@ const KEY = {
 
 
 
-class Asteroid {
+class Food {
   constructor(args) {
     this.position = args.position
     this.velocity = {
@@ -21,8 +21,8 @@ class Asteroid {
       y: randomNumBetween(-1.5, 1.5)
     }
     this.rotation = 0;
-    this.rotationSpeed = randomNumBetween(-1, 1)
-    this.radius = args.size;
+    this.rotationSpeed = randomNumBetween(-1, 0.1)
+    this.radius = 150 //args.size;
     this.score = (80/this.radius)*5;
     this.create = args.create;
     this.addScore = args.addScore;
@@ -30,13 +30,14 @@ class Asteroid {
   }
 
   destroy(){
+    console.log('destroy food!!!!!!!!!!!!!!!!!!!!' )
     this.delete = true;
     this.addScore(this.score);
 
-    // Explode
-    for (let i = 0; i < this.radius; i++) {
+    //Explode
+    for (let i = 0; i < 2; i++) {
       const particle = new Particle({
-        lifeSpan: randomNumBetween(60, 100),
+        lifeSpan: randomNumBetween(10, 10),
         size: randomNumBetween(1, 3),
         position: {
           x: this.position.x + randomNumBetween(-this.radius/4, this.radius/4),
@@ -50,22 +51,22 @@ class Asteroid {
       this.create(particle, 'particles');
     }
 
-    // Break into smaller asteroids
-    if(this.radius > 10){
-      for (let i = 0; i < 2; i++) {
-        let asteroid = new Asteroid({
-
-          size: this.radius/2,
-          position: {
-            x: randomNumBetween(-10, 20)+this.position.x,
-            y: randomNumBetween(-10, 20)+this.position.y
-          },
-          create: this.create.bind(this),
-          addScore: this.addScore.bind(this)
-        });
-        this.create(asteroid, 'asteroids');
-      }
-    }
+    // // Break into smaller asteroids
+    // if(this.radius > 10){
+    //   console.log('123 Break into smaller')
+    //   for (let i = 0; i < 2; i++) {
+    //     let food = new Food({
+    //       size: this.radius/2,
+    //       position: {
+    //         x: randomNumBetween(-10, 20)+this.position.x,
+    //         y: randomNumBetween(-10, 20)+this.position.y
+    //       },
+    //       create: this.create.bind(this),
+    //       addScore: this.addScore.bind(this)
+    //     });
+    //     this.create(food, 'food');
+    //   }
+    // }
   }
 
   render(state){
@@ -149,6 +150,7 @@ class Particle {
     context.restore();
   }
 }
+
 class Bullet {
   constructor(args) {
     let posDelta = rotatePoint({x:0, y:-20}, {x:0,y:0}, args.ship.rotation * Math.PI / 180)
@@ -217,10 +219,10 @@ class Ship {
   }
 
   destroy(){
-    this.delete = true;
-    this.onDie();
+    // this.delete = true;
+    // this.onDie();
 
-    // Explode
+    // //Explode
     // for (let i = 0; i < 60; i++) {
     //   const particle = new Particle({
     //     lifeSpan: randomNumBetween(60, 100),
@@ -265,11 +267,12 @@ class Ship {
         y: posDelta.y / randomNumBetween(3, 5)
       }
     });
-    //this.create(particle, 'particles');
+    this.create(particle, 'particles');
   }
 
   render(state){
     // Controls
+    this.grou = Date.now();
     console.log('render ship')
     if(state.keys.up){
       this.accelerate(1);
@@ -286,6 +289,7 @@ class Ship {
       this.lastShot = Date.now();
     }
 
+    Date.now() - this.grou > 1500 && console.log('ahaha')
     // Move
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
@@ -344,14 +348,14 @@ export class MoveExample extends Component {
         down  : 0,
         space : 0,
       },
-      asteroidCount: 3,
+      foodCount: 3,
       currentScore: 0,
       topScore: localStorage['topscore'] || 0,
       inGame: false,
       shipLevel: 1
     }
     this.ship = [];
-    this.asteroids = [];
+    this.food = [];
     this.bullets = [];
     this.particles = [];
   }
@@ -395,6 +399,7 @@ export class MoveExample extends Component {
   }
 
   update() {
+    console.log(this.food.length)
     const context = this.state.context;
     const keys = this.state.keys;
     const ship = this.ship[0];
@@ -409,19 +414,19 @@ export class MoveExample extends Component {
     context.globalAlpha = 1;
 
     // // Next set of asteroids
-    if(!this.asteroids.length){
-      let count = this.state.asteroidCount + 1;
-      this.setState({ asteroidCount: count });
-      this.generateAsteroids(count)
+    if(!this.food.length){
+      let count = this.state.foodCount + 1;
+      this.setState({ foodCount: count });
+      this.generateFood(count)
     }
 
-    // Check for colisions
-    // this.checkCollisionsWith(this.bullets, this.asteroids);
-    // this.checkCollisionsWith(this.ship, this.asteroids);
+    //Check for colisions
+    this.checkCollisionsWith(this.bullets, this.food);
+    this.checkCollisionsWith(this.ship, this.food);
 
     // Remove or render
-    //this.updateObjects(this.particles, 'particles')
-    this.updateObjects(this.asteroids, 'asteroids')
+    this.updateObjects(this.particles, 'particles')
+    this.updateObjects(this.food, 'food')
     this.updateObjects(this.bullets, 'bullets')
     this.updateObjects(this.ship, 'ship')
 
@@ -456,9 +461,9 @@ export class MoveExample extends Component {
     })
     this.createObject(ship, 'ship')
 
-    // Make asteroids
-    // this.asteroids = [];
-    this.generateAsteroids(this.state.asteroidCount)
+    // Make food
+    this.food = [];
+    this.generateFood(this.state.foodCount)
   }
 
   gameOver(){
@@ -475,12 +480,13 @@ export class MoveExample extends Component {
     }
   }
 
-  generateAsteroids(howMany){
-    let asteroids = [];
+  generateFood(howMany){
+    console.log(howMany)
+    let food = [];
     let ship = this.ship[0];
     for (let i = 0; i < howMany; i++) {
-      let asteroid = new Asteroid({
-        size: 80,
+      let food = new Food({
+        size: 20,
         position: {
           x: randomNumBetweenExcluding(0, this.state.screen.width, ship.position.x-60, ship.position.x+60),
           y: randomNumBetweenExcluding(0, this.state.screen.height, ship.position.y-60, ship.position.y+60)
@@ -488,7 +494,7 @@ export class MoveExample extends Component {
         create: this.createObject.bind(this),
         addScore: this.addScore.bind(this)
       });
-      this.createObject(asteroid, 'asteroids');
+      this.createObject(food, 'food');
     }
   }
 
