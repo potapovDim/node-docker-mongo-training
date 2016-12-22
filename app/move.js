@@ -30,7 +30,6 @@ class Food {
   }
 
   destroy(){
-    console.log('destroy food!!!!!!!!!!!!!!!!!!!!' )
     this.delete = true;
     this.addScore(this.score);
 
@@ -208,17 +207,19 @@ class Ship {
       x: 0,
       y: 0
     }
-    this.rotation = 0;
-    this.rotationSpeed = 6;
-    this.speed = 0.15;
-    this.inertia = 0.99;
-    this.radius = 100;
-    this.lastShot = 0;
-    this.create = args.create;
-    this.onDie = args.onDie;
+    this.rotation = 0
+    this.rotationSpeed = 6
+    this.speed = 0.15
+    this.inertia = 0.99
+    this.radius = 100
+    this.lastShot = 0
+    this.create = args.create
+    this.onDie = args.onDie
+    this.onEat = args.onEat
   }
 
   destroy(){
+    this.onEat()
     // this.delete = true;
     // this.onDie();
 
@@ -311,19 +312,19 @@ class Ship {
     else if(this.position.y < 0) this.position.y = state.screen.height;
 
     // Ship view
-    const context = state.context;
-    context.save();
-    context.translate(this.position.x, this.position.y);
+    const context = state.context
+    context.save()
+    context.translate(this.position.x, this.position.y)
     context.rotate(this.rotation * Math.PI / 180);
     context.strokeStyle = '#ffffff';
     context.fillStyle = '#000000';
     context.lineWidth = 2;
     context.beginPath();
-    context.moveTo(0, -20);
-    context.lineTo(10, 8);
-    context.lineTo(5, 21);
-    context.lineTo(-5, 7);
-    context.lineTo(-10, 10);
+    context.moveTo(0, -50+state.point)
+    context.lineTo(10, 50)
+    context.lineTo(5, 50)
+    context.lineTo(-5, 50)
+    context.lineTo(-10, 50)
     context.closePath();
     context.fill();
     context.stroke();
@@ -335,6 +336,7 @@ export class MoveExample extends Component {
   constructor() {
     super();
     this.state = {
+      point:0,
       screen: {
         width: window.innerWidth,
         height: window.innerHeight,
@@ -382,47 +384,47 @@ export class MoveExample extends Component {
   }
 
   componentDidMount() {
-    window.addEventListener('keyup',   this.handleKeys.bind(this, false));
-    window.addEventListener('keydown', this.handleKeys.bind(this, true));
-    window.addEventListener('resize',  this.handleResize.bind(this, false));
+    window.addEventListener('keyup',   this.handleKeys.bind(this, false))
+    window.addEventListener('keydown', this.handleKeys.bind(this, true))
+    window.addEventListener('resize',  this.handleResize.bind(this, false))
 
-    const context = this.refs.canvas.getContext('2d');
-    this.setState({ context: context });
-    this.startGame();
-    requestAnimationFrame(() => {this.update()});
+    const context = this.refs.canvas.getContext('2d')
+    this.setState({ context: context })
+    this.startGame()
+    requestAnimationFrame(() => {this.update()})
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', this.handleKeys);
-    window.removeEventListener('resize', this.handleKeys);
-    window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('resize', this.handleKeys)
+    window.removeEventListener('resize', this.handleKeys)
+    window.removeEventListener('resize', this.handleResize)
   }
 
   update() {
     console.log(this.food.length)
-    const context = this.state.context;
-    const keys = this.state.keys;
-    const ship = this.ship[0];
+    const context = this.state.context
+    const keys = this.state.keys
+    const ship = this.ship[0]
 
-    context.save();
-    context.scale(this.state.screen.ratio, this.state.screen.ratio);
+    context.save()
+    context.scale(this.state.screen.ratio, this.state.screen.ratio)
 
     // Motion trail
-    context.fillStyle = '#AEB5DB';
-    context.globalAlpha = 0.4;
-    context.fillRect(0, 0, this.state.screen.width, this.state.screen.height);
-    context.globalAlpha = 1;
+    context.fillStyle = '#AEB5DB'
+    context.globalAlpha = 0.4
+    context.fillRect(0, 0, this.state.screen.width, this.state.screen.height)
+    context.globalAlpha = 1
 
     // // Next set of asteroids
     if(!this.food.length){
-      let count = this.state.foodCount + 1;
-      this.setState({ foodCount: count });
+      let count = this.state.foodCount + 1
+      this.setState({ foodCount: count })
       this.generateFood(count)
     }
 
     //Check for colisions
-    this.checkCollisionsWith(this.bullets, this.food);
-    this.checkCollisionsWith(this.ship, this.food);
+    this.checkCollisionsWith(this.bullets, this.food)
+    this.checkCollisionsWith(this.ship, this.food)
 
     // Remove or render
     this.updateObjects(this.particles, 'particles')
@@ -430,17 +432,17 @@ export class MoveExample extends Component {
     this.updateObjects(this.bullets, 'bullets')
     this.updateObjects(this.ship, 'ship')
 
-    context.restore();
+    context.restore()
 
     // Next frame
-    requestAnimationFrame(() => {this.update()});
+    requestAnimationFrame(() => {this.update()})
   }
 
   addScore(points){
     if(this.state.inGame){
       this.setState({
         currentScore: this.state.currentScore + points,
-      });
+      })
     }
   }
 
@@ -448,7 +450,7 @@ export class MoveExample extends Component {
     this.setState({
       inGame: true,
       currentScore: 0,
-    });
+    })
 
     // Make ship
     let ship = new Ship({
@@ -457,33 +459,40 @@ export class MoveExample extends Component {
         y: this.state.screen.height/2
       },
       create: this.createObject.bind(this),
-      onDie: this.gameOver.bind(this)
+      onDie: this.onDie,
+      onEat : this.onEat
     })
     this.createObject(ship, 'ship')
 
     // Make food
-    this.food = [];
+    this.food = []
     this.generateFood(this.state.foodCount)
+  }
+
+  onEat = () => {
+    this.setState({
+      point:this.state.point + 10
+    })
   }
 
   gameOver(){
     this.setState({
       inGame: false,
-    });
+    })
 
     // Replace top score
     if(this.state.currentScore > this.state.topScore){
       this.setState({
         topScore: this.state.currentScore,
-      });
-      localStorage['topscore'] = this.state.currentScore;
+      })
+      localStorage['topscore'] = this.state.currentScore
     }
   }
 
   generateFood(howMany){
     console.log(howMany)
-    let food = [];
-    let ship = this.ship[0];
+    let food = []
+    let ship = this.ship[0]
     for (let i = 0; i < howMany; i++) {
       let food = new Food({
         size: 20,
@@ -493,47 +502,47 @@ export class MoveExample extends Component {
         },
         create: this.createObject.bind(this),
         addScore: this.addScore.bind(this)
-      });
-      this.createObject(food, 'food');
+      })
+      this.createObject(food, 'food')
     }
   }
 
   createObject(item, group){
-    this[group].push(item);
+    this[group].push(item)
   }
 
   updateObjects(items, group){
-    let index = 0;
+    let index = 0
     for (let item of items) {
       if (item.delete) {
-        this[group].splice(index, 1);
+        this[group].splice(index, 1)
       }else{
-        items[index].render(this.state);
+        items[index].render(this.state)
       }
-      index++;
+      index++
     }
   }
 
   checkCollisionsWith(items1, items2) {
-    var a = items1.length - 1;
-    var b;
-    for(a; a > -1; --a){
-      b = items2.length - 1;
-      for(b; b > -1; --b){
-        var item1 = items1[a];
-        var item2 = items2[b];
+    var a = items1.length - 1
+    var b
+    for(a ;a > -1; --a){
+      b = items2.length - 1
+      for(b ;b > -1; --b){
+        var item1 = items1[a]
+        var item2 = items2[b]
         if(this.checkCollision(item1, item2)){
-          item1.destroy();
-          item2.destroy();
+          item1.destroy()
+          item2.destroy()
         }
       }
     }
   }
 
   checkCollision(obj1, obj2){
-    var vx = obj1.position.x - obj2.position.x;
-    var vy = obj1.position.y - obj2.position.y;
-    var length = Math.sqrt(vx * vx + vy * vy);
+    var vx = obj1.position.x - obj2.position.x
+    var vy = obj1.position.y - obj2.position.y
+    var length = Math.sqrt(vx * vx + vy * vy)
     if(length < obj1.radius + obj2.radius){
       return true;
     }
