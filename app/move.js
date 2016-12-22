@@ -1,6 +1,6 @@
 import React , {Component} from 'react'
 
-import { rotatePoint, randomNumBetween} from './engineHelper'
+import {rotatePoint, randomNumBetween, asteroidVertices, randomNumBetweenExcluding} from './engineHelper'
 const KEY = {
   LEFT:  37,
   RIGHT: 39,
@@ -11,9 +11,103 @@ const KEY = {
   SPACE: 32
 }
 
+
+
+class Asteroid {
+  constructor(args) {
+    this.position = args.position
+    this.velocity = {
+      x: randomNumBetween(-1.5, 1.5),
+      y: randomNumBetween(-1.5, 1.5)
+    }
+    this.rotation = 0;
+    this.rotationSpeed = randomNumBetween(-1, 1)
+    this.radius = args.size;
+    this.score = (80/this.radius)*5;
+    this.create = args.create;
+    this.addScore = args.addScore;
+    this.vertices = asteroidVertices(8, args.size)
+  }
+
+  destroy(){
+    this.delete = true;
+    this.addScore(this.score);
+
+    // Explode
+    for (let i = 0; i < this.radius; i++) {
+      const particle = new Particle({
+        lifeSpan: randomNumBetween(60, 100),
+        size: randomNumBetween(1, 3),
+        position: {
+          x: this.position.x + randomNumBetween(-this.radius/4, this.radius/4),
+          y: this.position.y + randomNumBetween(-this.radius/4, this.radius/4)
+        },
+        velocity: {
+          x: randomNumBetween(-1.5, 1.5),
+          y: randomNumBetween(-1.5, 1.5)
+        }
+      });
+      this.create(particle, 'particles');
+    }
+
+    // Break into smaller asteroids
+    if(this.radius > 10){
+      for (let i = 0; i < 2; i++) {
+        let asteroid = new Asteroid({
+
+          size: this.radius/2,
+          position: {
+            x: randomNumBetween(-10, 20)+this.position.x,
+            y: randomNumBetween(-10, 20)+this.position.y
+          },
+          create: this.create.bind(this),
+          addScore: this.addScore.bind(this)
+        });
+        this.create(asteroid, 'asteroids');
+      }
+    }
+  }
+
+  render(state){
+    // Move
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+
+    // Rotation
+    this.rotation += this.rotationSpeed;
+    if (this.rotation >= 360) {
+      this.rotation -= 360;
+    }
+    if (this.rotation < 0) {
+      this.rotation += 360;
+    }
+
+    // Screen edges
+    if(this.position.x > state.screen.width + this.radius) this.position.x = -this.radius;
+    else if(this.position.x < -this.radius) this.position.x = state.screen.width + this.radius;
+    if(this.position.y > state.screen.height + this.radius) this.position.y = -this.radius;
+    else if(this.position.y < -this.radius) this.position.y = state.screen.height + this.radius;
+
+    // Draw
+    const context = state.context;
+    context.save();
+    context.translate(this.position.x, this.position.y);
+    context.rotate(this.rotation * Math.PI / 180);
+    context.strokeStyle = '#942F59';
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(0, -this.radius);
+    for (let i = 1; i < this.vertices.length; i++) {
+      context.lineTo(this.vertices[i].x, this.vertices[i].y);
+    }
+    context.closePath();
+    context.stroke();
+    context.restore();
+  }
+}
+
 class Particle {
   constructor(args) {
-    console.log(args)
     this.position = args.position
     this.velocity = args.velocity
     this.radius = args.size;
@@ -45,7 +139,7 @@ class Particle {
     const context = state.context;
     context.save();
     context.translate(this.position.x, this.position.y);
-    context.fillStyle = '#ffffff';
+    context.fillStyle = '#D6F915';
     context.lineWidth = 2;
     context.beginPath();
     context.moveTo(0, -this.radius);
@@ -67,7 +161,7 @@ class Bullet {
       x:posDelta.x / 2,
       y:posDelta.y / 2
     }
-    this.radius = 2
+    this.radius = 50
   }
 
   destroy(){
@@ -92,8 +186,8 @@ class Bullet {
     context.save()
     context.translate(this.position.x, this.position.y)
     context.rotate(this.rotation * Math.PI / 180)
-    context.fillStyle = '#FFF'
-    context.lineWidth = 0,5
+    context.fillStyle = '#D6F915'
+    context.lineWidth = 5,5
     context.beginPath()
 
     context.arc(0, 0, 2, 0, 2 * Math.PI)
@@ -106,6 +200,7 @@ class Bullet {
 
 class Ship {
   constructor(args) {
+    console.log('12312312 SHIP!!!!!!!!!')
     this.position = args.position
     this.velocity = {
       x: 0,
@@ -115,7 +210,7 @@ class Ship {
     this.rotationSpeed = 6;
     this.speed = 0.15;
     this.inertia = 0.99;
-    this.radius = 20;
+    this.radius = 100;
     this.lastShot = 0;
     this.create = args.create;
     this.onDie = args.onDie;
@@ -126,21 +221,21 @@ class Ship {
     this.onDie();
 
     // Explode
-    for (let i = 0; i < 60; i++) {
-      const particle = new Particle({
-        lifeSpan: randomNumBetween(60, 100),
-        size: randomNumBetween(1, 4),
-        position: {
-          x: this.position.x + randomNumBetween(-this.radius/4, this.radius/4),
-          y: this.position.y + randomNumBetween(-this.radius/4, this.radius/4)
-        },
-        velocity: {
-          x: randomNumBetween(-1.5, 1.5),
-          y: randomNumBetween(-1.5, 1.5)
-        }
-      });
-      this.create(particle, 'particles');
-    }
+    // for (let i = 0; i < 60; i++) {
+    //   const particle = new Particle({
+    //     lifeSpan: randomNumBetween(60, 100),
+    //     size: randomNumBetween(1, 4),
+    //     position: {
+    //       x: this.position.x + randomNumBetween(-this.radius/4, this.radius/4),
+    //       y: this.position.y + randomNumBetween(-this.radius/4, this.radius/4)
+    //     },
+    //     velocity: {
+    //       x: randomNumBetween(-1.5, 1.5),
+    //       y: randomNumBetween(-1.5, 1.5)
+    //     }
+    //   });
+    //   this.create(particle, 'particles');
+    // }
   }
 
   rotate(dir){
@@ -170,11 +265,12 @@ class Ship {
         y: posDelta.y / randomNumBetween(3, 5)
       }
     });
-    this.create(particle, 'particles');
+    //this.create(particle, 'particles');
   }
 
   render(state){
     // Controls
+    console.log('render ship')
     if(state.keys.up){
       this.accelerate(1);
     }
@@ -210,7 +306,7 @@ class Ship {
     if(this.position.y > state.screen.height) this.position.y = 0;
     else if(this.position.y < 0) this.position.y = state.screen.height;
 
-    // Draw
+    // Ship view
     const context = state.context;
     context.save();
     context.translate(this.position.x, this.position.y);
@@ -219,9 +315,9 @@ class Ship {
     context.fillStyle = '#000000';
     context.lineWidth = 2;
     context.beginPath();
-    context.moveTo(0, -15);
-    context.lineTo(10, 10);
-    context.lineTo(5, 7);
+    context.moveTo(0, -20);
+    context.lineTo(10, 8);
+    context.lineTo(5, 21);
     context.lineTo(-5, 7);
     context.lineTo(-10, 10);
     context.closePath();
@@ -230,7 +326,6 @@ class Ship {
     context.restore();
   }
 }
-
 
 export class MoveExample extends Component {
   constructor() {
@@ -252,12 +347,13 @@ export class MoveExample extends Component {
       asteroidCount: 3,
       currentScore: 0,
       topScore: localStorage['topscore'] || 0,
-      inGame: false
+      inGame: false,
+      shipLevel: 1
     }
     this.ship = [];
-    //this.asteroids = [];
+    this.asteroids = [];
     this.bullets = [];
-    //this.particles = [];
+    this.particles = [];
   }
 
   handleResize(value, e){
@@ -307,17 +403,17 @@ export class MoveExample extends Component {
     context.scale(this.state.screen.ratio, this.state.screen.ratio);
 
     // Motion trail
-    context.fillStyle = '#000';
+    context.fillStyle = '#AEB5DB';
     context.globalAlpha = 0.4;
     context.fillRect(0, 0, this.state.screen.width, this.state.screen.height);
     context.globalAlpha = 1;
 
     // // Next set of asteroids
-    // if(!this.asteroids.length){
-    //   let count = this.state.asteroidCount + 1;
-    //   this.setState({ asteroidCount: count });
-    //   this.generateAsteroids(count)
-    // }
+    if(!this.asteroids.length){
+      let count = this.state.asteroidCount + 1;
+      this.setState({ asteroidCount: count });
+      this.generateAsteroids(count)
+    }
 
     // Check for colisions
     // this.checkCollisionsWith(this.bullets, this.asteroids);
@@ -325,7 +421,7 @@ export class MoveExample extends Component {
 
     // Remove or render
     //this.updateObjects(this.particles, 'particles')
-    //this.updateObjects(this.asteroids, 'asteroids')
+    this.updateObjects(this.asteroids, 'asteroids')
     this.updateObjects(this.bullets, 'bullets')
     this.updateObjects(this.ship, 'ship')
 
@@ -357,12 +453,12 @@ export class MoveExample extends Component {
       },
       create: this.createObject.bind(this),
       onDie: this.gameOver.bind(this)
-    });
-    this.createObject(ship, 'ship');
+    })
+    this.createObject(ship, 'ship')
 
     // Make asteroids
     // this.asteroids = [];
-    // this.generateAsteroids(this.state.asteroidCount)
+    this.generateAsteroids(this.state.asteroidCount)
   }
 
   gameOver(){
@@ -379,22 +475,22 @@ export class MoveExample extends Component {
     }
   }
 
-  // generateAsteroids(howMany){
-  //   let asteroids = [];
-  //   let ship = this.ship[0];
-  //   for (let i = 0; i < howMany; i++) {
-  //     let asteroid = new Asteroid({
-  //       size: 80,
-  //       position: {
-  //         x: randomNumBetweenExcluding(0, this.state.screen.width, ship.position.x-60, ship.position.x+60),
-  //         y: randomNumBetweenExcluding(0, this.state.screen.height, ship.position.y-60, ship.position.y+60)
-  //       },
-  //       create: this.createObject.bind(this),
-  //       addScore: this.addScore.bind(this)
-  //     });
-  //     this.createObject(asteroid, 'asteroids');
-  //   }
-  // }
+  generateAsteroids(howMany){
+    let asteroids = [];
+    let ship = this.ship[0];
+    for (let i = 0; i < howMany; i++) {
+      let asteroid = new Asteroid({
+        size: 80,
+        position: {
+          x: randomNumBetweenExcluding(0, this.state.screen.width, ship.position.x-60, ship.position.x+60),
+          y: randomNumBetweenExcluding(0, this.state.screen.height, ship.position.y-60, ship.position.y+60)
+        },
+        create: this.createObject.bind(this),
+        addScore: this.addScore.bind(this)
+      });
+      this.createObject(asteroid, 'asteroids');
+    }
+  }
 
   createObject(item, group){
     this[group].push(item);
